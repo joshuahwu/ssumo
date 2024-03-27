@@ -1,54 +1,24 @@
 import sys
-from base_path import DATA_PATH
+from base_path import HUMAN_DATA_PATH
 
-sys.path.append(DATA_PATH + "human_action/human_body_prior")
-from human_body_prior.src.human_body_prior.body_model.body_model import BodyModel
+sys.path.append(HUMAN_DATA_PATH + "human_action/human_body_prior")
+from human_body_prior.body_model.body_model import BodyModel
 import torch
 import numpy as np
 import json
 
 babel = []
-babel.append(json.load(open("/hpc/group/tdunn/action_data/BABEL/train.json")))
-babel.append(json.load(open("/hpc/group/tdunn/action_data/BABEL/val.json")))
-babel.append(json.load(open("/hpc/group/tdunn/action_data/BABEL/test.json")))
+babel.append(json.load(open(HUMAN_DATA_PATH + "BABEL/train.json")))
+babel.append(json.load(open(HUMAN_DATA_PATH + "BABEL/val.json")))
+babel.append(json.load(open(HUMAN_DATA_PATH + "BABEL/test.json")))
 
 babelfull = babel[0] | babel[1] | babel[2]
 keys = [i for i in babelfull.keys()]
 
-data = np.load("/hpc/group/tdunn/action_data/BABEL/data.npy", allow_pickle=True)
-labels = np.load("/hpc/group/tdunn/action_data/BABEL/labels.npy", allow_pickle=True)
-meta = np.load("/hpc/group/tdunn/action_data/BABEL/meta.npy", allow_pickle=True)
+# data = np.load(HUMAN_DATA_PATH + "BABEL/data.npy", allow_pickle=True)
+# labels = np.load(HUMAN_DATA_PATH + "BABEL/labels.npy", allow_pickle=True)
+# meta = np.load(HUMAN_DATA_PATH + "BABEL/meta.npy", allow_pickle=True)
 
-
-# [i for i in babelfull.keys() if babelfull[i]['frame_ann']!=None]
-# babelfull['9773']['seq_ann']['labels'][0]['act_cat'] # gives list of act labels if no frame_ann
-# seq=[[i['act_cat'],i['start_t'],i['end_t']] for i in babelfull['47']['frame_ann']['labels']] # these 3 lines give ordered list of frame labels for lists of actions
-# sorter=np.array([i[1:] for i in seq])
-# sortedseq=[seq[i] for i in np.argsort(sorter[:,0])]
-
-# actdict={}
-# for i in seq:
-#     for j in i[0]:
-#         if j not in actdict:
-#             actdict[j]=[]
-#         actdict[j].append(i[1:])
-
-# import pdb;pdb.set_trace();
-# for i in actdict.keys():
-#     import pdb;pdb.set_trace();
-#     actdict[i]=np.array(actdict[i])
-#     actdict[i]=actdict[i][np.argsort(actdict[i][:,0])]
-#     j=0
-#     last=len(actdict[i])-1
-#     while j<last:
-#         if actdict[i][j][1]>=actdict[i][j+1][0]:
-#             actdict[i][j]=[actdict[i][j][0],actdict[i][j+1][1]]
-#             actdict[i]=np.delete(actdict[i],j+1)
-#             last-=1
-#         else:
-#             j+=1
-
-# import pdb; pdb.set_trace();
 from tqdm import tqdm
 
 meta = []
@@ -74,7 +44,7 @@ allsets = [
     "TotalCapture",
     "Transitionsmocap",
 ]
-bm_fname = "/hpc/group/tdunn/hk276/CAPTURE_demo/Python_analysis/engine/babelmodel.npz"
+bm_fname = HUMAN_DATA_PATH + "babelmodel.npz"
 num_betas = 16  # number of body parameters
 
 for k in tqdm(keys):
@@ -101,7 +71,7 @@ for k in tqdm(keys):
         [allsets.index(babelfull[k]["feat_p"].split("/")[0]), evalset.index(True), k]
     )  # dataset ID, evaluation set, babel id, url
 
-    amass_npz_fname = "/hpc/group/tdunn/action_data/AMASS/" + babelfull[k]["feat_p"]
+    amass_npz_fname = HUMAN_DATA_PATH + "AMASS/" + babelfull[k]["feat_p"]
     bdata = np.load(amass_npz_fname)
     time_length = len(bdata["trans"])
 
@@ -134,18 +104,22 @@ for k in tqdm(keys):
 
     data.append(np.array(body_pose_beta.Jtr.detach()))
 
+import pdb
+
+pdb.set_trace()
+
 np.save(
-    "/hpc/group/tdunn/action_data/BABEL/data.npy",
+    HUMAN_DATA_PATH + "BABEL/data.npy",
     np.asarray(data, dtype="object"),
     allow_pickle=True,
 )
 np.save(
-    "/hpc/group/tdunn/action_data/BABEL/meta.npy",
+    HUMAN_DATA_PATH + "BABEL/meta.npy",
     np.asarray(meta, dtype="object"),
     allow_pickle=True,
 )
 np.save(
-    "/hpc/group/tdunn/action_data/BABEL/labels.npy",
+    HUMAN_DATA_PATH + "BABEL/labels.npy",
     np.asarray(labels, dtype="object"),
     allow_pickle=True,
 )
